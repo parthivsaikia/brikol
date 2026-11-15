@@ -9,6 +9,12 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { ToasterProvider } from "~/components/toaster-provider";
+
+// Suppress AI SDK deprecation warnings
+if (typeof process !== "undefined") {
+	process.env.AI_SDK_LOG_WARNINGS = "false";
+}
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -34,6 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				{children}
+				<ToasterProvider />
 				<ScrollRestoration />
 				<Scripts />
 			</body>
