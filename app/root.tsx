@@ -10,10 +10,84 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { ToasterProvider } from "~/components/toaster-provider";
+import { Sun, Moon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Suppress AI SDK deprecation warnings
 if (typeof process !== "undefined") {
 	process.env.AI_SDK_LOG_WARNINGS = "false";
+}
+
+// Prevent flash of wrong theme on SSR
+function ThemeScript() {
+	return (
+		<script
+			dangerouslySetInnerHTML={{
+				__html: `
+					(function() {
+						try {
+							const saved = localStorage.getItem('dark');
+							const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+							if (saved === 'true' || (!saved && prefersDark)) {
+								document.documentElement.classList.add('dark');
+							}
+						} catch (e) {}
+					})();
+				`,
+			}}
+		/>
+	);
+}
+
+function DarkModeToggle() {
+	const [mounted, setMounted] = useState(false);
+	const [isDark, setIsDark] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+		const saved = localStorage.getItem('dark');
+		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		const initial = saved === 'true' || (!saved && prefersDark);
+		setIsDark(initial);
+	}, []);
+
+	const toggle = () => {
+		const next = !isDark;
+		setIsDark(next);
+		localStorage.setItem('dark', String(next));
+		if (next) {
+			document.documentElement.classList.add('dark');
+		} else {
+			document.documentElement.classList.remove('dark');
+		}
+	};
+
+	if (!mounted) {
+		return (
+			<button
+				className="p-2 rounded-lg bg-muted hover:bg-muted/50 transition-colors"
+				aria-label="Toggle dark mode"
+				disabled
+			>
+				<Sun className="w-5 h-5" aria-hidden="true" />
+			</button>
+		);
+	}
+
+	return (
+		<button
+			onClick={toggle}
+			className="p-2 rounded-lg bg-muted hover:bg-muted/50 transition-colors focus-ring"
+			aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+			aria-pressed={isDark}
+		>
+			{isDark ? (
+				<Sun className="w-5 h-5 text-honey" aria-hidden="true" />
+			) : (
+				<Moon className="w-5 h-5 text-charcoal" aria-hidden="true" />
+			)}
+		</button>
+	);
 }
 
 export const links: Route.LinksFunction = () => [
@@ -37,6 +111,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
 				<Links />
+				<ThemeScript />
 			</head>
 			<body>
 				{children}

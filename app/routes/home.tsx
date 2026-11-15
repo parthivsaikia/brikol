@@ -5,6 +5,8 @@ import { generateRecipe } from "~/lib/llm/ai";
 import { classifyError, type AIError, AI_ERROR_MESSAGES } from "~/lib/llm/errors";
 import { RecipeDisplay } from "~/components/recipe-display";
 import type { RecipeResponse } from "~/lib/llm/response";
+import { Sun, Moon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type ActionData =
 	| { status: "success"; recipe: RecipeResponse }
@@ -40,6 +42,57 @@ export const action = async ({ request }: Route.ActionArgs) => {
 	}
 };
 
+function DarkModeToggle() {
+	const [mounted, setMounted] = useState(false);
+	const [isDark, setIsDark] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+		const saved = localStorage.getItem('dark');
+		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		const initial = saved === 'true' || (!saved && prefersDark);
+		setIsDark(initial);
+	}, []);
+
+	const toggle = () => {
+		const next = !isDark;
+		setIsDark(next);
+		localStorage.setItem('dark', String(next));
+		if (next) {
+			document.documentElement.classList.add('dark');
+		} else {
+			document.documentElement.classList.remove('dark');
+		}
+	};
+
+	if (!mounted) {
+		return (
+			<button
+				className="p-2 rounded-lg bg-muted hover:bg-muted/50 transition-colors"
+				aria-label="Toggle dark mode"
+				disabled
+			>
+				<Sun className="w-5 h-5" aria-hidden="true" />
+			</button>
+		);
+	}
+
+	return (
+		<button
+			onClick={toggle}
+			className="p-2 rounded-lg bg-muted hover:bg-muted/50 transition-colors focus-ring"
+			aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+			aria-pressed={isDark}
+		>
+			{isDark ? (
+				<Sun className="w-5 h-5 text-honey" aria-hidden="true" />
+			) : (
+				<Moon className="w-5 h-5 text-charcoal" aria-hidden="true" />
+			)}
+		</button>
+	);
+}
+
 export default function Home() {
 	const actionData = useActionData<ActionData>();
 	const navigation = useNavigation();
@@ -53,13 +106,18 @@ export default function Home() {
 	return (
 		<div className="min-h-screen bg-background">
 			{/* Hero header — centered, minimal */}
-			<header className="container mx-auto max-w-[720px] px-[1.5rem] py-10 pt-16 text-center">
-				<h1 className="text-[clamp(2rem,6vw,3.5rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-charcoal">
-					Fridge to Recipe
-				</h1>
-				<p className="mt-3 text-lg text-muted-foreground max-w-[50ch] mx-auto">
-					List what you have. Get a recipe you can actually cook.
-				</p>
+			<header className="container mx-auto max-w-[720px] px-[1.5rem] py-10 pt-16">
+				<div className="flex items-start justify-between gap-4">
+					<div className="flex-1 text-center sm:text-left">
+						<h1 className="text-[clamp(2rem,6vw,3.5rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-charcoal">
+							Fridge to Recipe
+						</h1>
+						<p className="mt-3 text-lg text-muted-foreground max-w-[50ch] mx-auto sm:mx-0">
+							List what you have. Get a recipe you can actually cook.
+						</p>
+					</div>
+					<DarkModeToggle />
+				</div>
 			</header>
 
 			{/* Form section */}
