@@ -242,6 +242,16 @@ function ServingsScaler({ value, onIncrement, onDecrement, original, className }
 	original: number;
 	className?: string;
 }) {
+	const handleKeyDown = (e: React.KeyboardEvent, dir: 'up' | 'down') => {
+		if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+			e.preventDefault();
+			if (dir === 'up') onIncrement();
+		} else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+			e.preventDefault();
+			if (dir === 'down') onDecrement();
+		}
+	};
+
 	return (
 		<div className={cn("flex items-center justify-between gap-4 p-4 bg-muted rounded-xl border", className)}>
 			<div className="flex items-center gap-3">
@@ -251,6 +261,7 @@ function ServingsScaler({ value, onIncrement, onDecrement, original, className }
 			<div className="flex items-center gap-2">
 				<button
 					onClick={onDecrement}
+					onKeyDown={(e) => handleKeyDown(e, 'down')}
 					disabled={value <= 1}
 					aria-label="Decrease servings"
 					className="check-toggle w-12 h-12 text-charcoal"
@@ -261,6 +272,7 @@ function ServingsScaler({ value, onIncrement, onDecrement, original, className }
 				<span className="w-16 text-center text-2xl font-semibold tabular-nums text-charcoal">{value}</span>
 				<button
 					onClick={onIncrement}
+					onKeyDown={(e) => handleKeyDown(e, 'up')}
 					disabled={value >= 20}
 					aria-label="Increase servings"
 					className="check-toggle w-12 h-12 text-charcoal"
@@ -328,8 +340,14 @@ function IngredientItem({
 		<li>
 			<button
 				onClick={onToggle}
+				onKeyDown={(e) => {
+					if (e.key === ' ' || e.key === 'Enter') {
+						e.preventDefault();
+						onToggle();
+					}
+				}}
 				className={cn(
-					"w-full text-left p-4 rounded-xl border transition-colors",
+					"w-full text-left p-4 rounded-xl border transition-colors focus-ring",
 					"bg-background hover:bg-muted",
 					hasSwaps && "pr-12"
 				)}
@@ -466,14 +484,22 @@ function StepItem({
 				<div className="absolute left-0 top-1">
 					<button
 						onClick={() => onToggle(step.id)}
+						onKeyDown={(e) => {
+							if (e.key === ' ' || e.key === 'Enter') {
+								e.preventDefault();
+								onToggle(step.id);
+							}
+						}}
 						className={cn(
-							"w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all duration-200 ease-spring",
+							"w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all duration-200 ease-spring focus-ring",
 							isChecked
 								? "bg-sage border-sage text-cream shadow-[0_0_0_3px_var(--color-sage)/0.2]"
 								: "border-mist bg-background text-muted-foreground hover:border-sage hover:text-sage"
 						)}
 						aria-checked={isChecked}
 						aria-label={isChecked ? `Unmark step ${stepNumber}` : `Mark step ${stepNumber} as done`}
+						role="checkbox"
+						tabIndex={0}
 					>
 						{isChecked ? (
 							<svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
